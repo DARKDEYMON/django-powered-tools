@@ -76,7 +76,7 @@ class FormPageRedirectView(FormView):
 	Modelo extra para usarse con ListSerachView para redirigir ala pagina del objeto deseado y este se redirija con un ancla
 	"""
 	def get_success_url(self):
-		add =  '?idpage=' + str(self.object.id)
+		add =  '?idobject=' + str(self.object.id)
 		return super().get_success_url() + add
 
 class ModelExtraView(FormView):
