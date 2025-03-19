@@ -9,7 +9,14 @@ from django.db.models.functions import Cast
 from operator import attrgetter
 from django.urls import reverse_lazy
 
-__all__ = ['ListSearchView', 'FormPageRedirectView', 'ModelExtraView']
+__all__ = [
+	'ListSearchView',
+	'FormPageRedirectView',
+	'ModelExtraView',
+	'CreateViewInternal',
+	'UpdateViewInternal',
+	'DeleteViewInternal'
+]
 
 class ListSearchView(FormMixin, ListView):
 	"""
