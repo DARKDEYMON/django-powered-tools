@@ -6,11 +6,16 @@ from django.db.models.functions import Coalesce
 from django.db.models import Value
 from django.db.models import CharField
 from django.db.models.functions import Cast
+from operator import attrgetter
+from django.urls import reverse_lazy
+
+__all__ = ['ListSearchView', 'FormPageRedirectView', 'ModelExtraView']
 
 class ListSearchView(FormMixin, ListView):
 	"""
-	form_class:		si existe un formulario de busqueda personalisado se renderiza como form
-	fields_search:	es un dato forsosos de existir
+	Modelo de lista con formulario de busqueda y redireccion a objeto dentro la lista
+	form_class:		si existe un formulario de búsqueda personalizado se renderiza como form el dato es forzoso
+	fields_search:	es un dato forzosos de existir indica las filas sobre las que se buscar acepta relaciones
 	ordering:		ordering es requerido
 	"""
 	def get_success_url(self):
@@ -74,3 +79,36 @@ class ModelExtraView(FormView):
 		if 'object_extra' not in context and hasattr(self, 'model_extra'):
 			context['object_extra'] = self.model_extra.objects.get(id=self.kwargs['pk'])
 		return context
+
+class CreateViewInternal(CreateView, ModelExtraView):
+	"""
+	Modelo de guardado de vistas interna funciona con un model_extra o un ModelExtraView
+	model_extra :	es requerido indica el modelo de relación con el que obtener la llave foránea 'estos modelos solo sirven en modelos
+					que requieren un fk por ahora solo funciona si la llave foránea tiene por nombre en el modelo relacionado el mismo nombre
+					en minúscula
+	location: 		es requerido indica el lugar de donde sacar el pk para la redireccion
+	"""
+	def get_success_url(self):
+		retriever = attrgetter(self.location)
+		return reverse_lazy(self.success_url,kwargs={'pk':retriever(self.object)})
+	def form_valid(self, form):
+		setattr(form.instance, self.model_extra.__name__.lower(), self.get_context_data()['object_extra'])
+		return super().form_valid(form)
+
+class UpdateViewInternal(UpdateView):
+	"""
+	Modelo de guardado de vistas interna
+	location: 		es requerido indica el lugar de donde sacar el pk para la redireccion
+	"""
+	def get_success_url(self):
+		retriever = attrgetter(self.location)
+		return reverse_lazy(self.success_url,kwargs={'pk':retriever(self.object)})
+
+class DeleteViewInternal(DeleteView):
+	"""
+	Modelo de guardado de vistas interna
+	location: 		es requerido indica el lugar de donde sacar el pk para la redireccion
+	"""
+	def get_success_url(self):
+		retriever = attrgetter(self.location)
+		return reverse_lazy(self.success_url,kwargs={'pk':retriever(self.object)})
