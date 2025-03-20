@@ -1,7 +1,7 @@
-Django Power Views
+Django Power Tools
 ==========
 
 Descripción
 --------
 
-Vistas avanzadas de ayuda para Django
+Vistas y herramientas avanzadas de ayuda para Django

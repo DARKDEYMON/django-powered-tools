@@ -8,7 +8,7 @@ from django.db.models import CharField
 from django.db.models.functions import Cast
 from operator import attrgetter
 from django.urls import reverse_lazy
-from djangopowerviews.forms import *
+from djangopowertools.forms import *
 
 __all__ = [
 	'ListSearchView',
