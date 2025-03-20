@@ -9,7 +9,7 @@ setup(
 	long_description_content_type = 'text/markdown',
 	author = 'darkdeymon',
 	author_email = 'darkdeymon04@gmail.com',
-	url = '',
+	url = 'https://github.com/DARKDEYMON/django-power-views',
 	install_requires = [
 		'django>=5.1'
 	]
