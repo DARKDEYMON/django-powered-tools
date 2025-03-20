@@ -8,6 +8,7 @@ from django.db.models import CharField
 from django.db.models.functions import Cast
 from operator import attrgetter
 from django.urls import reverse_lazy
+from forms import *
 
 __all__ = [
 	'ListSearchView',
@@ -25,6 +26,7 @@ class ListSearchView(FormMixin, ListView):
 	fields_search:	es un dato forzosos de existir indica las filas sobre las que se buscar acepta relaciones
 	ordering:		ordering es requerido
 	"""
+	form_class = SearchForm
 	def get_success_url(self):
 		return self.request.path
 
