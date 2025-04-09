@@ -81,7 +81,7 @@ class FormPageRedirectView(FormView):
 		add =  '?idobject=' + str(self.object.id)
 		return super().get_success_url() + add
 
-class ModelExtraView(FormView):
+class ModelExtraView(FormMixin):
 	# model_extra:	se requiere pasar el modelo de relación este se renderisara por el pk pasado al view
 	def get_context_data(self, *args , **kwargs):
 		context = super().get_context_data(*args, **kwargs)
