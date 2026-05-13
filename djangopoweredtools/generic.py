@@ -1,5 +1,4 @@
 from django.views.generic import ListView, CreateView, UpdateView, FormView, DeleteView, DetailView
-from django.views.generic.edit import FormMixin
 from django.http import HttpResponseRedirect
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models.functions import Coalesce
@@ -9,6 +8,7 @@ from django.db.models.functions import Cast
 from operator import attrgetter
 from django.urls import reverse_lazy
 from djangopoweredtools.forms import *
+from djangopoweredtools.constants import ID_OBJECT_TO_FIND
 
 __all__ = [
 	'ListSearchView',
@@ -19,66 +19,71 @@ __all__ = [
 	'DeleteViewInternal'
 ]
 
-class ListSearchView(FormMixin, ListView):
+class ListSearchView(ListView):
 	"""
 	Modelo de lista con formulario de busqueda y redireccion a objeto dentro la lista
 	form_class:		si existe un formulario de búsqueda personalizado se renderiza como form el dato es forzoso
 	fields_search:	es un dato forzosos de existir indica las filas sobre las que se buscar acepta relaciones
 	ordering:		ordering es requerido
 	"""
+
 	form_class = SearchForm
-	def get_success_url(self):
-		return self.request.path
+	fields_search = []
+	field_form_search_name = 'search'
 
-	def get_form(self, form_class=None):
-		if form_class is None:
-			form_class = self.get_form_class()
-		if self.request.GET:
-			return form_class(self.request.GET)
-		else:
-			return form_class(**self.get_form_kwargs())
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		context['form'] = self.form_class(self.request.GET or None)
+		return context
 
-	def get(self, *args, **kwargs):
-		form = self.get_form()
-		if form.is_valid():
-			self.search = form.cleaned_data['search'] if form.cleaned_data['search'] != '' else None
-		redirect = self.redirect_to_object()
-		return redirect if redirect else super().get(*args, **kwargs)
+	@property
+	def search(self):
+		if not hasattr(self, '_search'):
+			form = self.form_class(self.request.GET or None)
 
-	def get_queryset(self):
-		query = super().get_queryset()
-		return self.search_fields(query)
+			if form.is_valid():
+				self._search = form.cleaned_data.get(self.field_form_search_name)
+			else:
+				self._search = None
+
+		return self._search
 
 	def search_fields(self, query):
-		search = getattr(self,'search', None)
+		search = self.search
 		if (search and len(self.fields_search)!=0):
 			trigram = None
 			for field in self.fields_search:
 				#self.model._meta.get_field(field)
-				if trigram==None:
-					trigram = TrigramSimilarity(Coalesce(Cast(field, CharField()), Value('')),search)
-				else:
-					trigram = trigram + TrigramSimilarity(Coalesce(Cast(field, CharField()),Value('')),search)
+				expr = TrigramSimilarity(Coalesce(Cast(field, CharField()), Value('')),search)
+				trigram = expr if trigram is None else trigram + expr
 			return query.annotate(
 				similarity = trigram
 			).order_by('-similarity')
 		else:
 			return query
 
+	def get_queryset(self):
+		query = super().get_queryset()
+		return self.search_fields(query)
+
+	def get(self, *args, **kwargs):
+		redirect = self.redirect_to_object() 
+		return redirect if redirect else super().get(*args, **kwargs)
+
 	def redirect_to_object(self):
 		if self.request.method == 'GET':
-			if('idobject' in self.request.GET and hasattr(self, 'paginate_by')):
-				idobject = int(self.request.GET['idobject'])
+			if( ID_OBJECT_TO_FIND in self.request.GET and hasattr(self, 'paginate_by')):
+				idobject = int(self.request.GET[ID_OBJECT_TO_FIND])
 				query_ids = list(self.get_queryset().values_list('id', flat=True))
 				page = query_ids.index(idobject) // self.get_paginate_by(self.get_queryset()) + 1
-				return HttpResponseRedirect(self.request.path + '?page=' + str(page) + '#' + str(idobject))
+				return HttpResponseRedirect(f'{self.request.path}?page={page}#{idobject}')
 
 class FormPageRedirectView(FormView):
 	"""
 	Modelo extra para usarse con ListSerachView para redirigir ala pagina del objeto deseado y este se redirija con un ancla
 	"""
 	def get_success_url(self):
-		add =  '?idobject=' + str(self.object.id)
+		add =  f'?{ID_OBJECT_TO_FIND}={self.object.id}'
 		return super().get_success_url() + add
 
 class ModelExtraView(FormMixin):

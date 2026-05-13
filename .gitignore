@@ -4,3 +4,4 @@
 /django_powered_tools.egg-info
 /token
 *.pyc
+.pypirc
