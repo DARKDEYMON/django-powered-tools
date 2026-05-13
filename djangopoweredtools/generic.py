@@ -1,4 +1,5 @@
 from django.views.generic import ListView, CreateView, UpdateView, FormView, DeleteView, DetailView
+from django.views.generic.edit import FormMixin
 from django.http import HttpResponseRedirect
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models.functions import Coalesce
