@@ -29,4 +29,4 @@ def get_field_model_verbose_name_plural(app, model, field):
 
 @register.simple_tag
 def get_app_verbose_name(app):
-	return apps.get_app_config(app).verbose_name
+	return apps.get_app_config(app).verbose_name.title()
