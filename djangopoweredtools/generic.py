@@ -7,6 +7,7 @@ from django.db.models import Value
 from django.db.models import CharField
 from django.db.models.functions import Cast
 from operator import attrgetter
+from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse_lazy
 from djangopoweredtools.forms import *
 from djangopoweredtools.constants import ID_OBJECT_TO_FIND
@@ -22,15 +23,23 @@ __all__ = [
 
 class ListSearchView(ListView):
 	"""
-	Modelo de lista con formulario de busqueda y redireccion a objeto dentro la lista
+	Modelo de lista con formulario de búsqueda y redireccion a objeto dentro la lista
 	form_class:		si existe un formulario de búsqueda personalizado se renderiza como form el dato es forzoso
 	fields_search:	es un dato forzosos de existir indica las filas sobre las que se buscar acepta relaciones
 	ordering:		ordering es requerido
+	paginate_by:	en este caso es obligatorio
 	"""
 
 	form_class = SearchForm
 	fields_search = []
 	field_form_search_name = 'search'
+
+	def get_paginate_by(self, queryset):
+		if not self.paginate_by:
+			raise ImproperlyConfigured(
+				f'{self.__class__.__name__} requiere definir "paginate_by"'
+			)
+		return self.paginate_by
 
 	def get_context_data(self, **kwargs):
 		context = super().get_context_data(**kwargs)

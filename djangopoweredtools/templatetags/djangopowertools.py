@@ -26,3 +26,7 @@ def get_field_model_verbose_name(app, model, field):
 @register.simple_tag
 def get_field_model_verbose_name_plural(app, model, field):
 	return apps.get_model(app, model)._meta.get_field(field).verbose_name_plural.title()
+
+@register.simple_tag
+def get_app_verbose_name(app):
+	return apps.get_app_config(app).verbose_name
