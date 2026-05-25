@@ -1,5 +1,4 @@
 from django.views.generic import ListView, CreateView, UpdateView, FormView, DeleteView, DetailView
-from django.views.generic.edit import FormMixin
 from django.http import HttpResponseRedirect
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models.functions import Coalesce
@@ -96,7 +95,7 @@ class FormPageRedirectView(FormView):
 		add =  f'?{ID_OBJECT_TO_FIND}={self.object.id}'
 		return super().get_success_url() + add
 
-class ModelExtraView(FormMixin):
+class ModelExtraView(FormView):
 	# model_extra:	se requiere pasar el modelo de relación este se renderisara por el pk pasado al view
 	def get_context_data(self, *args , **kwargs):
 		context = super().get_context_data(*args, **kwargs)
@@ -107,13 +106,13 @@ class ModelExtraView(FormMixin):
 class CreateViewInternal(CreateView, ModelExtraView):
 	"""
 	Modelo de guardado de vistas interna funciona con un model_extra o un ModelExtraView
-	model_extra :	es requerido indica el modelo de relación con el que obtener la llave foránea 'estos modelos solo sirven en modelos
-					que requieren un fk por ahora solo funciona si la llave foránea tiene por nombre en el modelo relacionado el mismo nombre
-					en minúscula
-	location: 		es requerido indica el lugar de donde sacar el pk para la redireccion
+	model_extra :				es requerido indica el modelo de relación con el que obtener la llave foránea 'estos modelos solo sirven en modelos
+								que requieren un fk por ahora solo funciona si la llave foránea tiene por nombre en el modelo relacionado el mismo nombre
+								en minúscula
+	location_redirect_path: 	es requerido indica el lugar de donde sacar el pk para la redireccion
 	"""
 	def get_success_url(self):
-		retriever = attrgetter(self.location)
+		retriever = attrgetter(self.location_redirect_path)
 		return reverse_lazy(self.success_url,kwargs={'pk':retriever(self.object)})
 	def form_valid(self, form):
 		setattr(form.instance, self.model_extra.__name__.lower(), self.get_context_data()['object_extra'])
@@ -121,18 +120,18 @@ class CreateViewInternal(CreateView, ModelExtraView):
 
 class UpdateViewInternal(UpdateView):
 	"""
-	Modelo de guardado de vistas interna
-	location: 		es requerido indica el lugar de donde sacar el pk para la redireccion
+	Modelo de actualizado de vistas interna
+	location_redirect_path: 	es requerido indica el lugar de donde sacar el pk para la redireccion
 	"""
 	def get_success_url(self):
-		retriever = attrgetter(self.location)
+		retriever = attrgetter(self.location_redirect_path)
 		return reverse_lazy(self.success_url,kwargs={'pk':retriever(self.object)})
 
 class DeleteViewInternal(DeleteView):
 	"""
-	Modelo de guardado de vistas interna
-	location: 		es requerido indica el lugar de donde sacar el pk para la redireccion
+	Modelo de eliminado de vistas interna
+	location_redirect_path: 	es requerido indica el lugar de donde sacar el pk para la redireccion
 	"""
 	def get_success_url(self):
-		retriever = attrgetter(self.location)
+		retriever = attrgetter(self.location_redirect_path)
 		return reverse_lazy(self.success_url,kwargs={'pk':retriever(self.object)})
