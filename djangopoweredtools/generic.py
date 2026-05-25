@@ -8,6 +8,8 @@ from django.db.models.functions import Cast
 from operator import attrgetter
 from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse_lazy
+from django.db.models import ForeignKey
+import warnings
 from djangopoweredtools.forms import *
 from djangopoweredtools.constants import ID_OBJECT_TO_FIND
 
@@ -109,13 +111,40 @@ class CreateViewInternal(CreateView, ModelExtraView):
 	model_extra :				es requerido indica el modelo de relación con el que obtener la llave foránea 'estos modelos solo sirven en modelos
 								que requieren un fk por ahora solo funciona si la llave foránea tiene por nombre en el modelo relacionado el mismo nombre
 								en minúscula
-	location_redirect_pk: 	es requerido indica el lugar de donde sacar el pk para la redireccion
+	location_redirect_pk: 		es requerido indica el lugar de donde sacar el pk para la redireccion
+	related_fk_name:			nombre de la relación en caso de ser necesario ser explicito
 	"""
+	related_fk_name = None
 	def get_success_url(self):
 		retriever = attrgetter(self.location_redirect_pk)
 		return reverse_lazy(self.success_url,kwargs={'pk':retriever(self.object)})
 	def form_valid(self, form):
-		setattr(form.instance, self.model_extra.__name__.lower(), self.get_context_data()['object_extra'])
+		field_name = None
+		
+		if self.related_fk_name:
+			field_name = self.related_fk_name
+		else:
+			foreign_keys = [
+				field for field in form.instance._meta.get_fields()
+				if (
+					isinstance(field, ForeignKey) and 
+					field.related_model == self.model_extra
+				)
+			]
+			if len(foreign_keys) == 0:
+				raise ValueError(
+					f'El modelo {form.instance.__class__.__name__} '
+					f'no tiene un ForeignKey hacia {self.model_extra.__name__}'
+				)
+			if len(foreign_keys) > 1:
+				warnings.warn(
+					f'El modelo {form.instance.__class__.__name__} '
+					f'contiene mas de una relación {self.model_extra.__name__} sea explicito con la variable related_fk_name se usara como valor por defecto la primera relación hasta ser explicito'
+				)
+
+			field_name = foreign_keys[0].name
+
+		setattr(form.instance, field_name, self.get_context_data()['object_extra'])
 		return super().form_valid(form)
 
 class UpdateViewInternal(UpdateView):
