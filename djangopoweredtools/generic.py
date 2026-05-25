@@ -109,10 +109,10 @@ class CreateViewInternal(CreateView, ModelExtraView):
 	model_extra :				es requerido indica el modelo de relación con el que obtener la llave foránea 'estos modelos solo sirven en modelos
 								que requieren un fk por ahora solo funciona si la llave foránea tiene por nombre en el modelo relacionado el mismo nombre
 								en minúscula
-	location_redirect_path: 	es requerido indica el lugar de donde sacar el pk para la redireccion
+	location_redirect_pk: 	es requerido indica el lugar de donde sacar el pk para la redireccion
 	"""
 	def get_success_url(self):
-		retriever = attrgetter(self.location_redirect_path)
+		retriever = attrgetter(self.location_redirect_pk)
 		return reverse_lazy(self.success_url,kwargs={'pk':retriever(self.object)})
 	def form_valid(self, form):
 		setattr(form.instance, self.model_extra.__name__.lower(), self.get_context_data()['object_extra'])
@@ -121,17 +121,17 @@ class CreateViewInternal(CreateView, ModelExtraView):
 class UpdateViewInternal(UpdateView):
 	"""
 	Modelo de actualizado de vistas interna
-	location_redirect_path: 	es requerido indica el lugar de donde sacar el pk para la redireccion
+	location_redirect_pk: 	es requerido indica el lugar de donde sacar el pk para la redireccion
 	"""
 	def get_success_url(self):
-		retriever = attrgetter(self.location_redirect_path)
+		retriever = attrgetter(self.location_redirect_pk)
 		return reverse_lazy(self.success_url,kwargs={'pk':retriever(self.object)})
 
 class DeleteViewInternal(DeleteView):
 	"""
 	Modelo de eliminado de vistas interna
-	location_redirect_path: 	es requerido indica el lugar de donde sacar el pk para la redireccion
+	location_redirect_pk: 	es requerido indica el lugar de donde sacar el pk para la redireccion
 	"""
 	def get_success_url(self):
-		retriever = attrgetter(self.location_redirect_path)
+		retriever = attrgetter(self.location_redirect_pk)
 		return reverse_lazy(self.success_url,kwargs={'pk':retriever(self.object)})
